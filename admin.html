@@ -128,7 +128,7 @@
       <input type="hidden" id="editMode" value="add">
       <input type="hidden" id="editProductId" value="">
       <div class="grid grid-cols-2 gap-4">
-        <div class="col-span-2 md:col-span-1"><label class="text-sm text-gray-600">Product ID</label><input id="productIdInput" placeholder="e.g. P003" class="w-full px-4 py-2 border rounded-xl mt-1"></div>
+        <div class="col-span-2 md:col-span-1"><label class="text-sm text-gray-600">Product ID</label><input id="productIdInput" placeholder="e.g. P011" class="w-full px-4 py-2 border rounded-xl mt-1"></div>
         <div class="col-span-2 md:col-span-1"><label class="text-sm text-gray-600">Category</label><input id="productCategoryInput" placeholder="e.g. Electronics" class="w-full px-4 py-2 border rounded-xl mt-1"></div>
         <div class="col-span-2"><label class="text-sm text-gray-600">Product Name</label><input id="productNameInput" placeholder="Name" class="w-full px-4 py-2 border rounded-xl mt-1"></div>
         <div class="col-span-2"><label class="text-sm text-gray-600">Description</label><textarea id="productDescInput" rows="2" placeholder="Product description" class="w-full px-4 py-2 border rounded-xl mt-1"></textarea></div>
@@ -157,7 +157,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby54pp2zta41iEJaE-7c82dvs0Y-ul8iZsfxlqjwa1VrJ9Z7XUdSeBAXyjB7uh6bLc/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUBxf8tffi9qUmCN6MxIXtARub1YP24_aLbZV-Hqr_VaOnsR5HDyeMcbLauoHY5Sq_hQ/exec'; // ← REPLACE
     let adminToken = localStorage.getItem('adminToken');
     let allProducts = [], allOrders = [];
 
@@ -176,7 +176,11 @@
     async function adminLogin() {
       const pwd = document.getElementById('adminPassword').value;
       showLoading('adminLoginBtn');
-      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'adminLogin', password: pwd }) });
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'adminLogin', password: pwd })
+      });
       const data = await res.json();
       if (data.status === 'success') {
         adminToken = data.token; localStorage.setItem('adminToken', adminToken);
@@ -208,14 +212,22 @@
     // Dashboard
     async function loadDashboard() {
       try {
-        const statsRes = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getDashboardStats', token: adminToken }) });
+        const statsRes = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'getDashboardStats', token: adminToken })
+        });
         const stats = await statsRes.json();
         if (stats.status === 'success') {
           document.getElementById('statsProducts').innerText = stats.data.totalProducts || 0;
           document.getElementById('statsOrders').innerText = stats.data.totalOrders || 0;
           document.getElementById('statsRevenue').innerHTML = `₹${(stats.data.totalRevenue || 0).toFixed(0)}`;
         }
-        const ordersRes = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllOrders', token: adminToken }) });
+        const ordersRes = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'getAllOrders', token: adminToken })
+        });
         const ordersData = await ordersRes.json();
         if (ordersData.status === 'success') {
           const recent = ordersData.data.slice(-5).reverse();
@@ -238,7 +250,11 @@
     // Products
     async function loadProducts() {
       try {
-        const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllProducts' }) });
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'getAllProducts' })
+        });
         const data = await res.json();
         if (data.status === 'success') { allProducts = data.data; renderProductsTable(allProducts); }
         else showToast('Failed to load products', 'error');
@@ -308,7 +324,11 @@
       showLoading('saveProductBtn');
       const action = mode === 'add' ? 'addProduct' : 'updateProduct';
       const payload = { action, token: adminToken, id, name, description, price, discount, stock, category, imageUrl };
-      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
       const data = await res.json();
       hideLoading('saveProductBtn', 'Save Product');
       if (data.status === 'success') {
@@ -318,8 +338,12 @@
       } else showToast(data.data, 'error');
     }
     async function deleteProduct(productId) {
-      if (!confirm('Permanently deactivate this product?')) return;
-      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteProduct', token: adminToken, id: productId }) });
+      if (!confirm('Deactivate this product?')) return;
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deleteProduct', token: adminToken, id: productId })
+      });
       const data = await res.json();
       if (data.status === 'success') { showToast('Product deactivated'); loadProducts(); } else showToast(data.data, 'error');
     }
@@ -330,7 +354,11 @@
         const statusFilter = document.getElementById('orderStatusFilter').value;
         const payload = { action: 'getAllOrders', token: adminToken };
         if (statusFilter) payload.status = statusFilter;
-        const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
         const data = await res.json();
         if (data.status === 'success') { allOrders = data.data; renderOrdersTable(allOrders); }
       } catch(e) { showToast('Error loading orders', 'error'); }
@@ -374,7 +402,11 @@
       const orderId = document.getElementById('statusOrderId').value;
       const status = document.getElementById('newOrderStatus').value;
       showLoading('updateStatusBtn');
-      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateOrderStatus', token: adminToken, orderId, status }) });
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateOrderStatus', token: adminToken, orderId, status })
+      });
       const data = await res.json();
       hideLoading('updateStatusBtn', 'Update');
       if (data.status === 'success') { showToast('Order status updated'); closeModal('updateStatusModal'); loadOrders(); loadDashboard(); } else showToast(data.data, 'error');
@@ -384,7 +416,11 @@
     async function updateAdminPassword() {
       const newPwd = document.getElementById('newAdminPassword').value;
       if (!newPwd) return showToast('Enter new password', 'error');
-      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateAdminPassword', token: adminToken, newPassword: newPwd }) });
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateAdminPassword', token: adminToken, newPassword: newPwd })
+      });
       const data = await res.json();
       if (data.status === 'success') { showToast('Password updated'); document.getElementById('newAdminPassword').value = ''; } else showToast(data.data, 'error');
     }
