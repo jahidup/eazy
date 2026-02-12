@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>EasyShop – Premium E‑commerce</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(145deg, #f9fcff 0%, #f1f7fc 100%);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .glass-header {
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.6);
+      box-shadow: 0 10px 30px -10px rgba(0,20,40,0.08);
+    }
+    .premium-card {
+      background: white;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.5);
+      box-shadow: 0 15px 35px -12px rgba(0,0,0,0.05);
+      transition: all 0.25s ease;
+    }
+    .premium-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 25px 40px -14px rgba(37,99,235,0.15);
+      border-color: #93c5fd;
+    }
+    .bottom-nav {
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(255,255,255,0.8);
+      box-shadow: 0 -8px 30px -8px rgba(0,0,0,0.04);
+    }
+    .nav-active {
+      color: #2563eb;
+      border-top: 3px solid #3b82f6;
+      background: linear-gradient(180deg, #eff6ff 0%, transparent 90%);
+    }
+    .filter-tag {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 100px;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.9rem;
+      transition: all 0.15s;
+    }
+    .filter-tag.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+    .btn-gradient {
+      background: linear-gradient(105deg, #2563eb, #3b82f6);
+      color: white;
+      border-radius: 100px;
+      padding: 0.6rem 1.8rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      box-shadow: 0 8px 18px -6px #3b82f6;
+    }
+    .btn-gradient:hover {
+      transform: scale(0.97);
+      box-shadow: 0 12px 24px -8px #2563eb;
+    }
+    .loading-dots {
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .loading-dots span {
+      width: 10px; height: 10px; background: #3b82f6; border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce { 0%,80%,100% { transform: scale(0); } 40% { transform: scale(1); } }
+    .toast {
+      position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+      background: white; padding: 14px 28px; border-radius: 100px;
+      box-shadow: 0 20px 40px -12px rgba(0,0,0,0.15);
+      display: flex; align-items: center; gap: 12px; z-index: 1000;
+      backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.8);
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+  </style>
+</head>
+<body class="pb-24 antialiased">
+
+  <div id="app" class="max-w-5xl mx-auto px-4">
+
+    <!-- ===== PREMIUM HEADER ===== -->
+    <div class="glass-header rounded-b-3xl px-6 py-5 mb-6 flex flex-wrap items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-crown text-3xl text-blue-600"></i>
+        <div>
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">EasyShop</h1>
+          <p class="text-xs text-gray-500 tracking-wide">Premium · Trust · Express</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="setLanguage('en')" class="text-sm bg-white/80 px-4 py-1.5 rounded-full shadow-sm border border-gray-100 hover:bg-blue-50 transition">EN</button>
+        <button onclick="setLanguage('hi')" class="text-sm bg-white/80 px-4 py-1.5 rounded-full shadow-sm border border-gray-100 hover:bg-blue-50 transition">हिंदी</button>
+      </div>
+    </div>
+
+    <!-- ===== DYNAMIC CONTENT ===== -->
+    <div id="content"></div>
+
+    <!-- ===== BOTTOM NAVIGATION ===== (always visible) -->
+    <div id="bottomNav" class="bottom-nav fixed bottom-0 left-0 right-0 flex justify-around py-2 px-4 max-w-3xl mx-auto rounded-t-3xl shadow-2xl">
+      <button onclick="showSection('home')" id="nav-home" class="flex flex-col items-center text-gray-500 nav-active">
+        <i class="fas fa-home text-xl"></i>
+        <span class="text-xs" data-i18n="home">Home</span>
+      </button>
+      <button onclick="showSection('cart')" id="nav-cart" class="flex flex-col items-center text-gray-500 relative">
+        <i class="fas fa-shopping-cart text-xl"></i>
+        <span class="text-xs" data-i18n="cart">Cart</span>
+        <span id="cartBadge" class="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 hidden">0</span>
+      </button>
+      <button onclick="showSection('orders')" id="nav-orders" class="flex flex-col items-center text-gray-500">
+        <i class="fas fa-box text-xl"></i>
+        <span class="text-xs" data-i18n="orders">Orders</span>
+      </button>
+      <button onclick="showSection('profile')" id="nav-profile" class="flex flex-col items-center text-gray-500">
+        <i class="fas fa-user text-xl"></i>
+        <span class="text-xs" data-i18n="profile">Profile</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== TOAST ===== -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby54pp2zta41iEJaE-7c82dvs0Y-ul8iZsfxlqjwa1VrJ9Z7XUdSeBAXyjB7uh6bLc/exec'; // ← replace after deployment
+
+    // ---------- I18N ----------
+    const translations = {
+      en: {
+        home: 'Home', cart: 'Cart', orders: 'Orders', profile: 'Profile',
+        login: 'Login', register: 'Register', email: 'Email', password: 'Password',
+        name: 'Full Name', phone: 'Phone', address: 'Address', logout: 'Logout',
+        addToCart: 'Add to Cart', buyNow: 'Buy Now', price: 'Price', discount: 'Off',
+        stock: 'Stock', category: 'Category', description: 'Description',
+        checkout: 'Checkout', placeOrder: 'Place Order', orderPlaced: 'Order placed! ID: ',
+        cartEmpty: 'Your cart is empty', total: 'Total', remove: 'Remove',
+        orderHistory: 'Order History', status: 'Status', date: 'Date',
+        editProfile: 'Edit Profile', save: 'Save', cancel: 'Cancel',
+        filter: 'Filter', clear: 'Clear', all: 'All', minPrice: 'Min', maxPrice: 'Max'
+      },
+      hi: {
+        home: 'होम', cart: 'कार्ट', orders: 'ऑर्डर', profile: 'प्रोफाइल',
+        login: 'लॉग इन', register: 'पंजीकरण', email: 'ईमेल', password: 'पासवर्ड',
+        name: 'पूरा नाम', phone: 'फोन', address: 'पता', logout: 'लॉग आउट',
+        addToCart: 'कार्ट में डालें', buyNow: 'खरीदें', price: 'कीमत', discount: 'छूट',
+        stock: 'स्टॉक', category: 'श्रेणी', description: 'विवरण',
+        checkout: 'चेकआउट', placeOrder: 'ऑर्डर करें', orderPlaced: 'ऑर्डर हो गया! आईडी: ',
+        cartEmpty: 'आपका कार्ट खाली है', total: 'कुल', remove: 'हटाएँ',
+        orderHistory: 'ऑर्डर इतिहास', status: 'स्थिति', date: 'तारीख',
+        editProfile: 'प्रोफाइल संपादित करें', save: 'सहेजें', cancel: 'रद्द करें',
+        filter: 'फ़िल्टर', clear: 'साफ करें', all: 'सभी', minPrice: 'न्यूनतम', maxPrice: 'अधिकतम'
+      }
+    };
+    let currentLang = 'en';
+    function setLanguage(lang) { currentLang = lang; applyTranslations(); }
+    function t(key) { return translations[currentLang]?.[key] || key; }
+    function applyTranslations() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (translations[currentLang]?.[key]) {
+          if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = translations[currentLang][key];
+          else el.innerText = translations[currentLang][key];
+        }
+      });
+    }
+
+    // ---------- STATE ----------
+    let customerToken = localStorage.getItem('customerToken');
+    let customer = null;
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    let products = [];
+    let filteredProducts = [];
+    let currentSection = 'home';
+
+    // ---------- INIT ----------
+    window.onload = async function() {
+      setLanguage('en');
+      await loadProducts();
+      if (customerToken) {
+        await loadCustomerProfile();
+      }
+      showSection('home'); // always show home first
+      updateCartBadge();
+    };
+
+    // ---------- LOADING / TOAST ----------
+    function showLoading(btn) { btn.disabled = true; btn.innerHTML = `<div class="loading-dots"><span></span><span></span><span></span></div>`; }
+    function hideLoading(btn, originalHTML) { btn.disabled = false; btn.innerHTML = originalHTML; }
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.className = `toast ${isError ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`;
+      toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>${msg}`;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 4000);
+    }
+
+    // ---------- SECTION RENDERING (with login guard) ----------
+    function showSection(section) {
+      // Guard sections that require login
+      if (['cart', 'orders', 'profile'].includes(section) && !customerToken) {
+        renderLogin(section); // pass return section after login
+        return;
+      }
+      currentSection = section;
+      // Update nav active state
+      ['home','cart','orders','profile'].forEach(s => {
+        const nav = document.getElementById(`nav-${s}`);
+        if (nav) nav.classList.remove('nav-active');
+      });
+      const activeNav = document.getElementById(`nav-${section}`);
+      if (activeNav) activeNav.classList.add('nav-active');
+
+      if (section === 'home') renderHome();
+      else if (section === 'cart') renderCart();
+      else if (section === 'orders') renderOrders();
+      else if (section === 'profile') renderProfile();
+    }
+
+    // ---------- API CALLS ----------
+    async function loadProducts() {
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllProducts' }) });
+        const data = await res.json();
+        if (data.status === 'success') {
+          products = data.data;
+          filteredProducts = [...products];
+        }
+      } catch (e) { showToast('Failed to load products', true); }
+    }
+
+    async function loadCustomerProfile() {
+      if (!customerToken) return;
+      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getCustomerProfile', token: customerToken }) });
+      const data = await res.json();
+      if (data.status === 'success') customer = data.data;
+    }
+
+    async function handleLogin(redirectSection = 'home') {
+      const email = document.getElementById('loginEmail').value;
+      const pwd = document.getElementById('loginPassword').value;
+      if (!email || !pwd) return showToast('Fill all fields', true);
+      const btn = document.getElementById('loginBtn');
+      const orig = btn.innerHTML;
+      showLoading(btn);
+      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'login', email, password: pwd }) });
+      const data = await res.json();
+      hideLoading(btn, orig);
+      if (data.status === 'success') {
+        customerToken = data.token;
+        localStorage.setItem('customerToken', customerToken);
+        customer = data.data;
+        await loadCustomerProfile();
+        showToast(`Welcome ${customer.name}!`);
+        showSection(redirectSection);
+      } else showToast(data.data, true);
+    }
+
+    async function handleRegister() {
+      const name = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const pwd = document.getElementById('regPassword').value;
+      const phone = document.getElementById('regPhone').value;
+      const addr = document.getElementById('regAddress').value;
+      if (!name || !email || !pwd) return showToast('Name, email, password required', true);
+      const btn = document.getElementById('registerBtn');
+      const orig = btn.innerHTML;
+      showLoading(btn);
+      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'register', email, password: pwd, name, phone, address: addr }) });
+      const data = await res.json();
+      hideLoading(btn, orig);
+      if (data.status === 'success') {
+        customerToken = data.token;
+        localStorage.setItem('customerToken', customerToken);
+        customer = data.data;
+        showToast('Registration successful!');
+        showSection('home');
+      } else showToast(data.data, true);
+    }
+
+    async function updateAddressOnly() {
+      const newAddress = document.getElementById('profileAddress').value;
+      if (!newAddress) return showToast('Address cannot be empty', true);
+      const btn = document.getElementById('saveAddressBtn');
+      const orig = btn.innerHTML;
+      showLoading(btn);
+      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ 
+        action: 'updateCustomerProfile', token: customerToken, address: newAddress 
+      })});
+      const data = await res.json();
+      hideLoading(btn, orig);
+      if (data.status === 'success') {
+        showToast('Address updated');
+        await loadCustomerProfile();
+        renderProfile();
+      } else showToast(data.data, 'error');
+    }
+
+    async function placeOrder() {
+      if (!cart.length) return showToast('Cart is empty', true);
+      const items = cart.map(i => ({ productId: i.id, quantity: i.quantity, name: i.name, price: i.finalPrice }));
+      const btn = document.getElementById('checkoutBtn');
+      const orig = btn.innerHTML;
+      showLoading(btn);
+      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ 
+        action: 'placeOrder', token: customerToken, items, address: customer.address, phone: customer.phone 
+      })});
+      const data = await res.json();
+      hideLoading(btn, orig);
+      if (data.status === 'success') {
+        showToast(t('orderPlaced') + data.data.orderId);
+        cart = [];
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartBadge();
+        renderCart();
+        showSection('orders');
+      } else showToast(data.data, 'error');
+    }
+
+    async function loadOrders() {
+      if (!customerToken) return [];
+      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getCustomerOrders', token: customerToken }) });
+      const data = await res.json();
+      return data.status === 'success' ? data.data : [];
+    }
+
+    // ---------- CART ----------
+    function addToCart(product) {
+      const existing = cart.find(i => i.id === product.id);
+      if (existing) existing.quantity += 1;
+      else cart.push({ ...product, quantity: 1 });
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartBadge();
+      showToast('Added to cart');
+    }
+    function removeFromCart(productId) {
+      cart = cart.filter(i => i.id !== productId);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartBadge();
+      renderCart();
+    }
+    function updateQuantity(productId, delta) {
+      const item = cart.find(i => i.id === productId);
+      if (item) {
+        item.quantity += delta;
+        if (item.quantity <= 0) removeFromCart(productId);
+        else {
+          localStorage.setItem('cart', JSON.stringify(cart));
+          renderCart();
+        }
+      }
+      updateCartBadge();
+    }
+    function updateCartBadge() {
+      const badge = document.getElementById('cartBadge');
+      const count = cart.reduce((acc, i) => acc + i.quantity, 0);
+      if (count > 0) { badge.innerText = count; badge.classList.remove('hidden'); } 
+      else badge.classList.add('hidden');
+    }
+
+    // ---------- FILTERS ----------
+    function applyFilters() {
+      let filtered = [...products];
+      const category = document.getElementById('categoryFilter')?.value;
+      const minPrice = parseFloat(document.getElementById('minPrice')?.value);
+      const maxPrice = parseFloat(document.getElementById('maxPrice')?.value);
+      if (category && category !== 'all') {
+        filtered = filtered.filter(p => p.category === category);
+      }
+      if (!isNaN(minPrice)) filtered = filtered.filter(p => p.finalPrice >= minPrice);
+      if (!isNaN(maxPrice)) filtered = filtered.filter(p => p.finalPrice <= maxPrice);
+      filteredProducts = filtered;
+      renderHomeProducts();
+    }
+    function clearFilters() {
+      document.getElementById('categoryFilter').value = 'all';
+      document.getElementById('minPrice').value = '';
+      document.getElementById('maxPrice').value = '';
+      filteredProducts = [...products];
+      renderHomeProducts();
+    }
+
+    // ---------- RENDER FUNCTIONS ----------
+    function renderLogin(returnSection = 'home') {
+      const html = `
+        <div class="premium-card p-8 max-w-md mx-auto">
+          <h2 class="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent" data-i18n="login">Login</h2>
+          <div class="space-y-4">
+            <input id="loginEmail" type="email" placeholder="${t('email')}" class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-300 transition">
+            <input id="loginPassword" type="password" placeholder="${t('password')}" class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-300 transition">
+            <button id="loginBtn" onclick="handleLogin('${returnSection}')" class="btn-gradient w-full py-3">${t('login')}</button>
+            <p class="text-center text-gray-600">${t('register')}? <a href="#" onclick="renderRegister()" class="text-blue-600 font-medium">${t('register')}</a></p>
+          </div>
+        </div>
+      `;
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function renderRegister() {
+      const html = `
+        <div class="premium-card p-8 max-w-md mx-auto">
+          <h2 class="text-2xl font-bold mb-6 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent" data-i18n="register">Register</h2>
+          <div class="space-y-4">
+            <input id="regName" placeholder="${t('name')}" class="w-full px-4 py-3 border border-gray-200 rounded-2xl">
+            <input id="regEmail" type="email" placeholder="${t('email')}" class="w-full px-4 py-3 border border-gray-200 rounded-2xl">
+            <input id="regPassword" type="password" placeholder="${t('password')}" class="w-full px-4 py-3 border border-gray-200 rounded-2xl">
+            <input id="regPhone" placeholder="${t('phone')}" class="w-full px-4 py-3 border border-gray-200 rounded-2xl">
+            <textarea id="regAddress" placeholder="${t('address')}" rows="2" class="w-full px-4 py-3 border border-gray-200 rounded-2xl"></textarea>
+            <button id="registerBtn" onclick="handleRegister()" class="btn-gradient w-full py-3 bg-gradient-to-r from-green-600 to-blue-600">${t('register')}</button>
+            <p class="text-center text-gray-600">${t('login')}? <a href="#" onclick="renderLogin()" class="text-blue-600 font-medium">${t('login')}</a></p>
+          </div>
+        </div>
+      `;
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function renderHome() {
+      if (!products.length) {
+        document.getElementById('content').innerHTML = '<div class="flex justify-center py-20"><div class="loading-dots"><span></span><span></span><span></span></div></div>';
+        return;
+      }
+      // Extract unique categories
+      const categories = [...new Set(products.map(p => p.category))];
+      let filterHtml = `
+        <div class="bg-white/70 backdrop-blur-sm rounded-3xl p-5 mb-6 shadow-sm border border-white/50">
+          <div class="flex flex-wrap items-end gap-4">
+            <div class="flex-1 min-w-[150px]">
+              <label class="text-xs font-medium text-gray-500 mb-1 block">${t('category')}</label>
+              <select id="categoryFilter" onchange="applyFilters()" class="w-full px-4 py-2.5 border border-gray-200 rounded-2xl bg-white">
+                <option value="all">${t('all')}</option>
+                ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+              </select>
+            </div>
+            <div class="w-32">
+              <label class="text-xs font-medium text-gray-500 mb-1 block">${t('minPrice')}</label>
+              <input type="number" id="minPrice" placeholder="₹" oninput="applyFilters()" class="w-full px-4 py-2.5 border border-gray-200 rounded-2xl">
+            </div>
+            <div class="w-32">
+              <label class="text-xs font-medium text-gray-500 mb-1 block">${t('maxPrice')}</label>
+              <input type="number" id="maxPrice" placeholder="₹" oninput="applyFilters()" class="w-full px-4 py-2.5 border border-gray-200 rounded-2xl">
+            </div>
+            <button onclick="clearFilters()" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-2xl text-sm font-medium transition">${t('clear')}</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('content').innerHTML = filterHtml + '<div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 gap-5"></div>';
+      filteredProducts = [...products];
+      renderHomeProducts();
+    }
+
+    function renderHomeProducts() {
+      const grid = document.getElementById('productGrid');
+      if (!grid) return;
+      let html = '';
+      filteredProducts.forEach(p => {
+        html += `
+          <div class="premium-card p-4 flex flex-col">
+            <div class="relative pb-[100%] mb-3 overflow-hidden rounded-2xl bg-gray-50">
+              <img src="${p.imageUrl}" class="absolute inset-0 w-full h-full object-cover transition duration-300 hover:scale-110">
+            </div>
+            <h3 class="font-semibold text-gray-800 line-clamp-2">${p.name}</h3>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="font-bold text-blue-700 text-lg">₹${p.finalPrice.toFixed(0)}</span>
+              ${p.discount > 0 ? `<span class="text-xs line-through text-gray-400">₹${p.price}</span>` : ''}
+              ${p.discount > 0 ? `<span class="text-xs bg-gradient-to-r from-green-100 to-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium">${p.discount}% off</span>` : ''}
+            </div>
+            <button onclick='addToCart(${JSON.stringify(p)})' class="mt-4 w-full bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 py-2.5 rounded-2xl text-sm font-medium transition border border-blue-200/50">
+              <i class="fas fa-cart-plus mr-1"></i> ${t('addToCart')}
+            </button>
+          </div>
+        `;
+      });
+      grid.innerHTML = html || `<div class="col-span-full text-center py-16 text-gray-500">${t('noProducts') || 'No products match'}</div>`;
+    }
+
+    function renderCart() {
+      if (!cart.length) {
+        document.getElementById('content').innerHTML = `<div class="premium-card p-10 text-center text-gray-500">${t('cartEmpty')}</div>`;
+        return;
+      }
+      let total = 0;
+      let itemsHtml = '';
+      cart.forEach(item => {
+        total += item.finalPrice * item.quantity;
+        itemsHtml += `
+          <div class="flex items-center gap-4 bg-white p-4 rounded-2xl border border-gray-100 mb-3 premium-card">
+            <img src="${item.imageUrl}" class="w-20 h-20 object-cover rounded-xl border">
+            <div class="flex-1">
+              <h4 class="font-medium">${item.name}</h4>
+              <div class="flex items-center gap-3 mt-1">
+                <span class="font-bold text-blue-600">₹${item.finalPrice.toFixed(0)}</span>
+                <span class="text-sm text-gray-500">x${item.quantity}</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end">
+              <button onclick="updateQuantity('${item.id}', -1)" class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center"><i class="fas fa-minus"></i></button>
+              <button onclick="updateQuantity('${item.id}', 1)" class="w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center mt-1"><i class="fas fa-plus"></i></button>
+              <button onclick="removeFromCart('${item.id}')" class="text-gray-400 hover:text-red-500 mt-2 text-sm"><i class="fas fa-trash-alt"></i></button>
+            </div>
+          </div>
+        `;
+      });
+      const html = `
+        <div class="premium-card p-6">
+          <h2 class="text-xl font-bold mb-5 flex items-center gap-2"><i class="fas fa-shopping-cart text-blue-600"></i> ${t('cart')}</h2>
+          ${itemsHtml}
+          <div class="border-t border-gray-100 pt-5 mt-5">
+            <div class="flex justify-between text-xl font-bold">
+              <span>${t('total')}:</span>
+              <span class="text-blue-700">₹${total.toFixed(0)}</span>
+            </div>
+            <button id="checkoutBtn" onclick="placeOrder()" class="btn-gradient w-full py-3.5 mt-6 text-lg">
+              <i class="fas fa-lock mr-2"></i> ${t('placeOrder')}
+            </button>
+          </div>
+        </div>
+      `;
+      document.getElementById('content').innerHTML = html;
+    }
+
+    async function renderOrders() {
+      const orders = await loadOrders();
+      if (!orders.length) {
+        document.getElementById('content').innerHTML = `<div class="premium-card p-12 text-center text-gray-500">${t('orderHistory')} empty</div>`;
+        return;
+      }
+      let html = '<div class="space-y-4">';
+      orders.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(order => {
+        html += `
+          <div class="premium-card p-5">
+            <div class="flex justify-between items-start">
+              <span class="font-mono text-xs bg-gray-100 px-3 py-1.5 rounded-full">${order.orderId}</span>
+              <span class="px-4 py-1.5 rounded-full text-xs font-medium ${order.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}">${order.status}</span>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">${new Date(order.date).toLocaleDateString()}</p>
+            <div class="mt-4 space-y-2">
+              ${order.items.map(i => `<div class="flex justify-between text-sm"><span>${i.productName} × ${i.quantity}</span><span class="font-medium">₹${i.price * i.quantity}</span></div>`).join('')}
+            </div>
+            <div class="border-t border-gray-100 mt-4 pt-4 flex justify-between font-bold">
+              <span>${t('total')}</span>
+              <span class="text-blue-700">₹${order.total}</span>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function renderProfile() {
+      if (!customer) return;
+      const html = `
+        <div class="premium-card p-7 max-w-2xl mx-auto">
+          <div class="flex items-center gap-4 mb-7">
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">
+              <i class="fas fa-user"></i>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold">${customer.name}</h2>
+              <p class="text-gray-500 text-sm">${customer.email}</p>
+            </div>
+          </div>
+          <div class="space-y-5">
+            <div class="bg-gray-50 p-5 rounded-2xl">
+              <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">${t('phone')}</label>
+              <p class="text-lg font-medium">${customer.phone || '—'}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 mb-1 block">${t('address')}</label>
+              <textarea id="profileAddress" rows="2" class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-300">${customer.address || ''}</textarea>
+            </div>
+            <button id="saveAddressBtn" onclick="updateAddressOnly()" class="btn-gradient w-full py-3.5">
+              <i class="fas fa-save mr-2"></i> ${t('save')} Address
+            </button>
+            <button onclick="logout()" class="w-full bg-gradient-to-r from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100 text-red-600 py-3.5 rounded-2xl font-medium border border-red-200 transition">
+              <i class="fas fa-sign-out-alt mr-2"></i> ${t('logout')}
+            </button>
+          </div>
+        </div>
+      `;
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function logout() {
+      localStorage.removeItem('customerToken');
+      customerToken = null;
+      customer = null;
+      cart = [];
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartBadge();
+      showSection('home');
+      showToast('Logged out');
+    }
+
+    // Expose functions globally
+    window.showSection = showSection;
+    window.handleLogin = handleLogin;
+    window.handleRegister = handleRegister;
+    window.renderRegister = renderRegister;
+    window.addToCart = addToCart;
+    window.removeFromCart = removeFromCart;
+    window.updateQuantity = updateQuantity;
+    window.placeOrder = placeOrder;
+    window.updateAddressOnly = updateAddressOnly;
+    window.logout = logout;
+    window.applyFilters = applyFilters;
+    window.clearFilters = clearFilters;
+    window.setLanguage = setLanguage;
+  </script>
+</body>
+</html>
